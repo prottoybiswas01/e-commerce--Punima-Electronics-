@@ -36,6 +36,7 @@ export async function sendWelcomeEmail({ to, name }: { to: string; name: string 
       return { success: false, error };
     }
 
+    console.log(`[Resend Welcome Email Sent] To: ${to}, ID: ${data?.id}`);
     return { success: true, data };
   } catch (err: any) {
     console.error("[Resend Welcome Email Exception]", err);
@@ -73,6 +74,7 @@ export async function sendOrderInvoiceEmail({
       return { success: false, error };
     }
 
+    console.log(`[Resend Order Invoice Sent] To: ${to}, ID: ${data?.id}`);
     return { success: true, data };
   } catch (err: any) {
     console.error("[Resend Order Invoice Exception]", err);
@@ -81,48 +83,83 @@ export async function sendOrderInvoiceEmail({
 }
 
 /**
- * 3. Broadcast New Product Marketing Announcement to registered customer database
+ * 3. Broadcast New Product Marketing Announcement to all registered users and customers
  */
-export async function broadcastNewProductEmail({ product }: { product: any }) {
+export async function broadcastNewProductEmail({
+  product,
+  targetEmail,
+}: {
+  product: any;
+  targetEmail?: string;
+}) {
   try {
-    // Fetch all registered customer emails
-    const customers = await prisma.customer.findMany({
-      where: {
-        email: { not: null },
-        isBlocked: false,
-      },
-      select: { email: true, name: true },
-      take: 100, // Safe batch limit per product launch
-    });
+    const allEmails = new Set<string>();
 
-    const validEmails = customers
-      .map((c) => c.email?.trim())
-      .filter((e): e is string => Boolean(e && e.includes("@")));
+    if (targetEmail && targetEmail.includes("@")) {
+      allEmails.add(targetEmail.trim().toLowerCase());
+    } else {
+      // Fetch from both User and Customer database collections
+      const [users, customers] = await Promise.all([
+        prisma.user.findMany({ select: { email: true } }),
+        prisma.customer.findMany({
+          where: { isBlocked: false },
+          select: { email: true },
+        }),
+      ]);
+
+      users.forEach((u) => u.email && allEmails.add(u.email.trim().toLowerCase()));
+      customers.forEach((c) => c.email && allEmails.add(c.email.trim().toLowerCase()));
+    }
+
+    const validEmails = Array.from(allEmails).filter((e) => e.includes("@"));
 
     if (validEmails.length === 0) {
-      return { success: true, message: "No customer emails to broadcast" };
+      console.warn("[Resend Broadcast] No recipient emails found in database.");
+      return { success: false, message: "No registered customer emails found to send." };
     }
 
     const html = generateNewProductEmailHtml(product, APP_URL);
+    console.log(`[Resend Broadcast] Sending new product email for "${product.name}" to ${validEmails.length} recipients:`, validEmails);
 
-    // Send emails in parallel with category tag
-    const sendPromises = validEmails.map((email) =>
-      resend.emails.send({
-        from: FROM_EMAIL,
-        to: [email],
-        subject: `🔥 New Arrival: ${product.name} at Purnima Electronics`,
-        html,
-        tags: [
-          { name: "category", value: "marketing_new_product" },
-          { name: "product_sku", value: product.sku || "product" },
-        ],
-      })
-    );
+    const sentResults: any[] = [];
+    const errors: any[] = [];
 
-    const results = await Promise.allSettled(sendPromises);
-    return { success: true, count: validEmails.length, results };
+    // Send emails sequentially or in small batches to respect Resend rate limits
+    for (const email of validEmails) {
+      try {
+        const { data, error } = await resend.emails.send({
+          from: FROM_EMAIL,
+          to: [email],
+          subject: `🔥 New Arrival: ${product.name} at Purnima Electronics`,
+          html,
+          tags: [
+            { name: "category", value: "marketing_new_product" },
+            { name: "product_sku", value: product.sku || "product" },
+          ],
+        });
+
+        if (error) {
+          console.error(`[Resend Broadcast Error for ${email}]:`, error);
+          errors.push({ email, error });
+        } else {
+          console.log(`[Resend Broadcast Success for ${email}]: ID: ${data?.id}`);
+          sentResults.push({ email, id: data?.id });
+        }
+      } catch (err: any) {
+        console.error(`[Resend Broadcast Exception for ${email}]:`, err);
+        errors.push({ email, error: err.message });
+      }
+    }
+
+    return {
+      success: sentResults.length > 0,
+      sentCount: sentResults.length,
+      failedCount: errors.length,
+      sentResults,
+      errors,
+    };
   } catch (err: any) {
-    console.error("[Resend Broadcast Exception]", err);
+    console.error("[Resend Broadcast Fatal Exception]", err);
     return { success: false, error: err.message };
   }
 }
@@ -158,6 +195,7 @@ export async function sendPasswordResetOtpEmail({
       return { success: false, error };
     }
 
+    console.log(`[Resend OTP Email Sent] To: ${to}, ID: ${data?.id}`);
     return { success: true, data };
   } catch (err: any) {
     console.error("[Resend OTP Email Exception]", err);

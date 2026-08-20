@@ -8,6 +8,7 @@ import { formatPrice } from "@/lib/utils";
 import { StockStatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,9 @@ import {
   Trash2,
   ExternalLink,
   Package,
+  Send,
+  Mail,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -46,12 +50,21 @@ export function ProductListClient({
 }: ProductListClientProps) {
   const router = useRouter();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [testEmail, setTestEmail] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
 
   const handleOpenDelete = (prod: any) => {
     setSelectedProduct(prod);
     setIsDeleteOpen(true);
+  };
+
+  const handleOpenBroadcast = (prod: any) => {
+    setSelectedProduct(prod);
+    setTestEmail("");
+    setIsBroadcastOpen(true);
   };
 
   const handleDelete = async () => {
@@ -73,6 +86,37 @@ export function ProductListClient({
       toast.error(e.message || "Failed to delete product");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleBroadcastEmail = async (sendToAll: boolean) => {
+    if (!selectedProduct) return;
+    if (!sendToAll && !testEmail) {
+      toast.error("Please enter an email address to send the test campaign");
+      return;
+    }
+
+    setIsBroadcasting(true);
+    try {
+      const res = await fetch(`/api/admin/products/${selectedProduct.id}/broadcast`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          targetEmail: sendToAll ? undefined : testEmail.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message || "Email campaign sent successfully!");
+        setIsBroadcastOpen(false);
+      } else {
+        toast.error(data.message || "Failed to send email broadcast");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Error sending broadcast email");
+    } finally {
+      setIsBroadcasting(false);
     }
   };
 
@@ -202,6 +246,16 @@ export function ProductListClient({
                         </span>
                       </td>
                       <td className="p-3.5 text-right space-x-1">
+                        {/* Send / Broadcast Email Campaign */}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          title="Broadcast Email Campaign"
+                          onClick={() => handleOpenBroadcast(p)}
+                          className="h-7 w-7 p-0 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                        </Button>
                         <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-slate-500 hover:text-blue-600" asChild>
                           <Link href={`/admin/products/${p.id}/edit`}>
                             <Edit2 className="h-3.5 w-3.5" />
@@ -248,6 +302,73 @@ export function ProductListClient({
           </div>
         )}
       </div>
+
+      {/* Broadcast Email Marketing Modal */}
+      <Dialog open={isBroadcastOpen} onOpenChange={setIsBroadcastOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-slate-900 font-extrabold text-base">
+              <Sparkles className="h-5 w-5 text-amber-500" />
+              Broadcast Email Marketing Campaign
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2 text-xs">
+            <div className="p-3 bg-slate-50 rounded-xl border flex items-center gap-3">
+              <div className="h-10 w-10 relative rounded-lg overflow-hidden bg-white border shrink-0">
+                <img
+                  src={selectedProduct?.images?.[0]?.url || "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=100"}
+                  alt={selectedProduct?.name || "Product"}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div>
+                <strong className="text-slate-900 block text-xs">{selectedProduct?.name}</strong>
+                <span className="text-slate-500 font-mono">Price: {formatPrice(selectedProduct?.price || 0)}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="font-bold text-slate-800">Send Test Email to Specific Address:</Label>
+              <div className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="e.g. your_email@gmail.com"
+                  value={testEmail}
+                  onChange={(e) => setTestEmail(e.target.value)}
+                  className="h-9 text-xs"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={isBroadcasting || !testEmail}
+                  onClick={() => handleBroadcastEmail(false)}
+                  className="shrink-0 text-xs font-semibold"
+                >
+                  <Mail className="h-3.5 w-3.5 mr-1" /> Send Test
+                </Button>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                Tip: Test the email template on your personal inbox before broadcasting to all customers.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button type="button" variant="outline" onClick={() => setIsBroadcastOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={isBroadcasting}
+              onClick={() => handleBroadcastEmail(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-xs font-bold gap-1.5"
+            >
+              <Send className="h-3.5 w-3.5" />
+              {isBroadcasting ? "Broadcasting..." : "Broadcast to All Customers"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Modal */}
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
