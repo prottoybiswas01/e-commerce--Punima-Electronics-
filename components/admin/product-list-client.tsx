@@ -328,11 +328,20 @@ export function ProductListClient({
             </div>
 
             <div className="space-y-2">
-              <Label className="font-bold text-slate-800">Send Test Email to Specific Address:</Label>
+              <div className="flex items-center justify-between">
+                <Label className="font-bold text-slate-800">Send Test Email to Specific Address:</Label>
+                <button
+                  type="button"
+                  onClick={() => setTestEmail("bjsacademy38@gmail.com")}
+                  className="text-[10px] text-blue-600 font-bold hover:underline"
+                >
+                  Fill Resend Owner Mail (bjsacademy38@gmail.com)
+                </button>
+              </div>
               <div className="flex gap-2">
                 <Input
                   type="email"
-                  placeholder="e.g. your_email@gmail.com"
+                  placeholder="e.g. bjsacademy38@gmail.com"
                   value={testEmail}
                   onChange={(e) => setTestEmail(e.target.value)}
                   className="h-9 text-xs"
@@ -348,9 +357,18 @@ export function ProductListClient({
                   <Mail className="h-3.5 w-3.5 mr-1" /> Send Test
                 </Button>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Tip: Test the email template on your personal inbox before broadcasting to all customers.
-              </p>
+              
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-[11px] text-amber-800 space-y-1">
+                <div className="font-bold flex items-center gap-1">
+                  <span>ℹ️ Resend Domain Verification Note:</span>
+                </div>
+                <p>
+                  While using <code>onboarding@resend.dev</code> (sandbox), Resend only allows testing to your registered account email (<strong>bjsacademy38@gmail.com</strong>).
+                </p>
+                <p>
+                  To broadcast to <strong>ALL customer emails</strong> or any address, add and verify your custom domain at <a href="https://resend.com/domains" target="_blank" rel="noreferrer" className="underline font-bold text-blue-700">resend.com/domains</a> (e.g. <code>kodl.uk</code>), then set <code>RESEND_FROM_EMAIL</code> in Vercel.
+                </p>
+              </div>
             </div>
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
