@@ -23,6 +23,7 @@ import {
   Store,
   Warehouse,
   Activity,
+  Award,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/inventory", label: "Inventory", icon: Warehouse },
   { href: "/admin/categories", label: "Categories", icon: Layers },
+  { href: "/admin/brands", label: "Brands", icon: Award },
   { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/coupons", label: "Coupons", icon: Tag },
   { href: "/admin/promotions", label: "Promotions", icon: Sparkles },
