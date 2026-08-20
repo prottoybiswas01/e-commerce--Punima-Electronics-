@@ -184,7 +184,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error.code === "auth/operation-not-allowed") {
         toast.error("Google Sign-In is not enabled in Firebase Console. Please enable Google in Firebase Authentication > Sign-in method.");
       } else if (error.code === "auth/unauthorized-domain") {
-        toast.error("Domain unauthorized. Please add localhost to Firebase Console > Authentication > Settings > Authorized Domains.");
+        const currentHostname = typeof window !== "undefined" ? window.location.hostname : "your domain";
+        toast.error(`Domain "${currentHostname}" is unauthorized. Add it in Firebase Console > Authentication > Settings > Authorized Domains.`);
       } else if (error.code === "auth/popup-blocked") {
         toast.error("Browser blocked popup. Please allow popups for this site and try again.");
       } else if (error.code === "auth/network-request-failed") {
