@@ -1,3 +1,14 @@
+# Next.js build and cache outputs
+.next
+.next/
+.next/**
+*.pack
+*.pack.gz
+out/
+build/
+dist/
+*.tsbuildinfo
+
 # Dependencies
 node_modules/
 .pnp
@@ -5,13 +16,6 @@ node_modules/
 
 # Testing
 coverage/
-
-# Next.js build output
-.next/
-out/
-build/
-dist/
-*.tsbuildinfo
 
 # Local Database
 *.db

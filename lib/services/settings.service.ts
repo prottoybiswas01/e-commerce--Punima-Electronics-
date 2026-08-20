@@ -5,7 +5,6 @@ export async function getStoreSettings() {
   if (!settings) {
     settings = await prisma.storeSettings.create({
       data: {
-        id: "default",
         shopName: "Purnima Electronics",
         phone: "+880 1712-345678",
         email: "sales@purnimaelectronics.com",

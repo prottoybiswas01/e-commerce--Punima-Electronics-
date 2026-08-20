@@ -45,7 +45,6 @@ async function main() {
   // 2. Seed Store Settings
   await prisma.storeSettings.create({
     data: {
-      id: "default",
       shopName: "Purnima Electronics",
       logoUrl: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=200&auto=format&fit=crop&q=80",
       phone: "+880 1712-345678",

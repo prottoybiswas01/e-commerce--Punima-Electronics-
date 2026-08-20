@@ -13,23 +13,26 @@ export async function POST(req: Request) {
     const body = await req.json();
     const data = settingsSchema.parse(body);
 
-    const settings = await prisma.storeSettings.upsert({
-      where: { id: "default" },
-      create: {
-        id: "default",
-        ...data,
-      },
-      update: {
-        ...data,
-      },
-    });
+    const existing = await prisma.storeSettings.findFirst();
+    let settings;
+
+    if (existing) {
+      settings = await prisma.storeSettings.update({
+        where: { id: existing.id },
+        data,
+      });
+    } else {
+      settings = await prisma.storeSettings.create({
+        data,
+      });
+    }
 
     await prisma.auditLog.create({
       data: {
         userName: session.name,
         action: "UPDATE_SETTINGS",
         entity: "StoreSettings",
-        entityId: "default",
+        entityId: settings.id,
         newState: JSON.stringify(settings),
       },
     });

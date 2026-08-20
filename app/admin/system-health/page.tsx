@@ -19,7 +19,7 @@ export default async function AdminSystemHealthPage() {
   let dbLatency = 0;
   try {
     const dbStart = Date.now();
-    await prisma.$queryRaw`SELECT 1`;
+    await prisma.product.count({ take: 1 });
     dbLatency = Date.now() - dbStart;
   } catch (e) {}
 
