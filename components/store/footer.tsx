@@ -1,8 +1,13 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
-import { Phone, Mail, MapPin, Clock, Shield, Truck, RotateCcw, Award } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Shield, Truck, RotateCcw, Award, MessageSquareWarning } from "lucide-react";
+import { ReportProblemModal } from "@/components/ui/report-problem-modal";
 
 export function Footer() {
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+
   return (
     <footer className="bg-slate-950 text-slate-300 pt-12 pb-24 sm:pb-12 border-t border-slate-800">
       <div className="container mx-auto px-4">
@@ -120,13 +125,13 @@ export function Footer() {
                 <Link href="/contact" className="hover:text-white transition">Contact Us & Shop Location</Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-white transition">Warranty & Return Policy</Link>
-              </li>
-              <li>
-                <Link href="/privacy" className="hover:text-white transition">Privacy & Security</Link>
-              </li>
-              <li>
-                <Link href="/shipping" className="hover:text-white transition">Shipping & Delivery Info</Link>
+                <button
+                  onClick={() => setIsReportModalOpen(true)}
+                  className="hover:text-blue-400 transition text-slate-300 text-left flex items-center gap-1.5"
+                >
+                  <MessageSquareWarning className="h-3.5 w-3.5 text-amber-400" />
+                  Report a Problem / Feedback
+                </button>
               </li>
             </ul>
           </div>
@@ -154,10 +159,21 @@ export function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-slate-900 pt-6 text-center text-xs text-slate-500">
-          <p>© {new Date().getFullYear()} Purnima Electronics. All rights reserved. Built with Next.js, Prisma, PostgreSQL & Pathao API.</p>
+        <div className="border-t border-slate-900 pt-6 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+          <p>© {new Date().getFullYear()} Purnima Electronics. All rights reserved.</p>
+          <button
+            onClick={() => setIsReportModalOpen(true)}
+            className="text-[11px] text-slate-400 hover:text-white transition flex items-center gap-1"
+          >
+            <MessageSquareWarning className="h-3 w-3 text-blue-400" /> Send Application Feedback
+          </button>
         </div>
       </div>
+
+      <ReportProblemModal
+        isOpen={isReportModalOpen}
+        onOpenChange={setIsReportModalOpen}
+      />
     </footer>
   );
 }

@@ -1,0 +1,60 @@
+name: Autonomous AI Code Repair Pipeline
+
+on:
+  repository_dispatch:
+    types: [production_error_detected, triage_incident]
+  workflow_dispatch:
+    inputs:
+      error_payload:
+        description: "JSON Error Incident Payload"
+        required: true
+        default: '{"errorId":"ERR-TEST-001","fingerprint":"fp_manual_test","severity":"MEDIUM","route":"/shop","message":"Manual test triage trigger","occurrences":1}'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  ai_repair_orchestrator:
+    name: AI Diagnosis & Repair Worker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: "file:./dev.db"
+
+      - name: Run AI Repair Agent
+        run: npx tsx scripts/ai-repair-agent.ts
+        env:
+          ERROR_EVENT_PAYLOAD: ${{ github.event.client_payload.error_payload || github.event.inputs.error_payload }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request with AI Fix
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "fix(ai): resolve production incident"
+          title: "🤖 AI Repair: Fix production incident"
+          body-path: ai_pr_body.md
+          labels: |
+            autonomous-ai-fix
+            needs-review
+          reviewers: ${{ github.repository_owner }}

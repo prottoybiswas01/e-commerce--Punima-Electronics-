@@ -1,13 +1,13 @@
 {
-  "/admin/courier/page": "app/admin/courier/page.js",
-  "/admin/audit-logs/page": "app/admin/audit-logs/page.js",
-  "/admin/notifications/page": "app/admin/notifications/page.js",
-  "/(store)/page": "app/(store)/page.js",
-  "/admin/orders/page": "app/admin/orders/page.js",
   "/admin/admin-users/page": "app/admin/admin-users/page.js",
-  "/admin/products/page": "app/admin/products/page.js",
-  "/(store)/account/page": "app/(store)/account/page.js",
-  "/(store)/shop/page": "app/(store)/shop/page.js",
-  "/(store)/track-order/page": "app/(store)/track-order/page.js",
-  "/(store)/offers/page": "app/(store)/offers/page.js"
+  "/admin/notifications/page": "app/admin/notifications/page.js",
+  "/admin/courier/page": "app/admin/courier/page.js",
+  "/admin/reviews/page": "app/admin/reviews/page.js",
+  "/admin/returns/page": "app/admin/returns/page.js",
+  "/admin/reports/page": "app/admin/reports/page.js",
+  "/admin/promotions/page": "app/admin/promotions/page.js",
+  "/admin/customers/page": "app/admin/customers/page.js",
+  "/admin/coupons/page": "app/admin/coupons/page.js",
+  "/admin/categories/page": "app/admin/categories/page.js",
+  "/admin/banners/page": "app/admin/banners/page.js"
 }

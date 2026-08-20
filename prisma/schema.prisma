@@ -47,6 +47,9 @@ model Customer {
   cart            Cart?
   couponUsages    CouponUsage[]
   returnRequests  ReturnRequest[]
+
+  @@index([phone])
+  @@index([email])
 }
 
 model Address {
@@ -63,6 +66,8 @@ model Address {
   addressLine     String
   isDefault       Boolean   @default(false)
   createdAt       DateTime  @default(now())
+
+  @@index([customerId])
 }
 
 model AdminUser {
@@ -184,6 +189,12 @@ model Product {
   cartItems          CartItem[]
   wishlistItems      WishlistItem[]
   reviews            Review[]
+
+  @@index([categoryId, isActive])
+  @@index([isFeatured, isActive])
+  @@index([isBestSeller, isActive])
+  @@index([isNewArrival, isActive])
+  @@index([createdAt])
 }
 
 model ProductImage {
@@ -247,6 +258,9 @@ model InventoryTransaction {
   notes          String?
   createdBy      String    @default("System")
   createdAt      DateTime  @default(now())
+
+  @@index([productId])
+  @@index([createdAt])
 }
 
 // ==========================================
@@ -359,6 +373,12 @@ model Order {
   couponUsage          CouponUsage?
   returnRequests       ReturnRequest[]
   courierShipment      CourierShipment?
+
+  @@index([customerPhone])
+  @@index([customerEmail])
+  @@index([orderStatus])
+  @@index([createdAt])
+  @@index([consignmentId])
 }
 
 model OrderItem {
@@ -632,4 +652,57 @@ model StoreSettings {
   metaDescription             String?  @default("Buy authentic smartphones, 4K TVs, home appliances, laptops, and audio gear at best prices in Bangladesh with fast nationwide home delivery.")
   
   updatedAt                   DateTime @updatedAt
+}
+
+// ==========================================
+// ERROR MONITORING, OBSERVABILITY & USER FEEDBACK
+// ==========================================
+
+model SystemErrorEvent {
+  id              String         @id @default(cuid())
+  errorId         String         @unique // e.g. "ERR-20260820-X7K92"
+  fingerprint     String         // Grouping hash
+  message         String
+  stackTrace      String?
+  route           String
+  component       String?
+  severity        String         @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
+  environment     String         @default("production")
+  version         String         @default("1.0.0")
+  userId          String?
+  browser         String?
+  os              String?
+  occurrences     Int            @default(1)
+  firstSeenAt     DateTime       @default(now())
+  lastSeenAt      DateTime       @default(now())
+  isResolved      Boolean        @default(false)
+  aiTriageStatus  String         @default("NEW") // NEW, INVESTIGATING, PR_OPENED, RESOLVED, WONT_FIX
+  linkedIssueUrl  String?
+  linkedPrUrl     String?
+  createdAt       DateTime       @default(now())
+
+  feedbacks       UserFeedback[]
+
+  @@index([fingerprint])
+  @@index([severity])
+  @@index([isResolved])
+  @@index([createdAt])
+}
+
+model UserFeedback {
+  id           String            @id @default(cuid())
+  errorId      String?
+  errorEvent   SystemErrorEvent? @relation(fields: [errorId], references: [errorId], onDelete: SetNull)
+  userId       String?
+  userEmail    String?
+  message      String
+  category     String            @default("BUG_REPORT") // BUG_REPORT, USABILITY, FEATURE_REQUEST, PERFORMANCE, OTHER
+  route        String
+  deviceInfo   String?
+  status       String            @default("NEW") // NEW, TRIAGED, INVESTIGATING, FIX_PROPOSED, RESOLVED
+  createdAt    DateTime          @default(now())
+
+  @@index([errorId])
+  @@index([status])
+  @@index([createdAt])
 }

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "./cart-provider";
 import { useWishlist } from "./wishlist-provider";
+import { useAuth } from "@/components/auth/auth-provider";
 import {
   Search,
   ShoppingCart,
@@ -15,6 +16,9 @@ import {
   Sparkles,
   Layers,
   Zap,
+  LogOut,
+  MapPin,
+  ShoppingBag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +39,7 @@ export function Header({
   const router = useRouter();
   const { itemCount, setIsCartOpen } = useCart();
   const { wishlistCount } = useWishlist();
+  const { user, customer, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -44,6 +49,8 @@ export function Header({
       router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
+
+  const displayName = user?.displayName || customer?.name || user?.email?.split("@")[0] || null;
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-sm">
@@ -206,30 +213,97 @@ export function Header({
                 size="sm"
                 className="flex items-center gap-1.5 text-slate-700 hover:text-blue-600 rounded-full px-2"
               >
-                <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
-                  <User className="h-4 w-4" />
+                {user ? (
+                  <div className="h-8 w-8 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow">
+                    {(displayName || "U")[0].toUpperCase()}
+                  </div>
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 border border-slate-200">
+                    <User className="h-4 w-4" />
+                  </div>
+                )}
+                <div className="hidden sm:block text-left text-xs">
+                  {user ? (
+                    <>
+                      <div className="text-[10px] text-slate-400">Hello,</div>
+                      <div className="font-bold text-slate-900 truncate max-w-[80px]">
+                        {displayName}
+                      </div>
+                    </>
+                  ) : (
+                    <span className="font-semibold text-slate-700">Sign In</span>
+                  )}
                 </div>
                 <ChevronDown className="h-3 w-3 text-slate-400 hidden sm:block" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/account">Profile & Orders</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/track-order">Track Order</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/wishlist">Wishlist</Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/admin" className="text-amber-600 font-semibold flex items-center justify-between">
-                  Admin Panel <Zap className="h-3.5 w-3.5" />
-                </Link>
-              </DropdownMenuItem>
+            <DropdownMenuContent align="end" className="w-56 p-1.5">
+              {user ? (
+                <>
+                  <DropdownMenuLabel className="font-bold text-slate-900 text-xs px-2 py-1.5">
+                    <div>{displayName}</div>
+                    <div className="text-[10px] text-slate-400 font-normal truncate">{user.email}</div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/account" className="flex items-center gap-2 text-xs py-2">
+                      <User className="h-3.5 w-3.5 text-slate-500" /> My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/account" className="flex items-center gap-2 text-xs py-2">
+                      <ShoppingBag className="h-3.5 w-3.5 text-slate-500" /> My Orders
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/account" className="flex items-center gap-2 text-xs py-2">
+                      <MapPin className="h-3.5 w-3.5 text-slate-500" /> Saved Addresses
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/track-order" className="flex items-center gap-2 text-xs py-2">
+                      <Zap className="h-3.5 w-3.5 text-slate-500" /> Track Order
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin" className="text-amber-600 font-semibold flex items-center justify-between text-xs py-2">
+                      Admin Backoffice <Zap className="h-3 w-3" />
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={logout}
+                    className="text-rose-600 font-semibold flex items-center gap-2 text-xs py-2 cursor-pointer"
+                  >
+                    <LogOut className="h-3.5 w-3.5" /> Sign Out
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem asChild>
+                    <Link href="/login" className="font-bold text-blue-600 text-xs py-2">
+                      Sign In
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/register" className="text-xs py-2 font-medium">
+                      Create Account
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/track-order" className="text-xs py-2">
+                      Track Order
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/login" className="text-slate-500 text-xs py-2">
+                      Admin Login
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

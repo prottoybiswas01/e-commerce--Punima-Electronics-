@@ -1,5 +1,6 @@
 import React from "react";
 import prisma from "@/lib/prisma";
+import { AuthProvider } from "@/components/auth/auth-provider";
 import { CartProvider } from "@/components/store/cart-provider";
 import { WishlistProvider } from "@/components/store/wishlist-provider";
 import { AnnouncementBar } from "@/components/store/announcement-bar";
@@ -20,17 +21,19 @@ export default async function StoreLayout({
   });
 
   return (
-    <CartProvider>
-      <WishlistProvider>
-        <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
-          <AnnouncementBar />
-          <Header categories={categories} />
-          <main className="flex-1 pb-16 sm:pb-0">{children}</main>
-          <Footer />
-          <MobileNav />
-          <CartDrawer />
-        </div>
-      </WishlistProvider>
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <WishlistProvider>
+          <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900">
+            <AnnouncementBar />
+            <Header categories={categories} />
+            <main className="flex-1 pb-16 sm:pb-0">{children}</main>
+            <Footer />
+            <MobileNav />
+            <CartDrawer />
+          </div>
+        </WishlistProvider>
+      </CartProvider>
+    </AuthProvider>
   );
 }

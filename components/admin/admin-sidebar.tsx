@@ -22,6 +22,7 @@ import {
   Settings,
   Store,
   Warehouse,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,7 @@ const NAV_ITEMS = [
   { href: "/admin/notifications", label: "Notifications", icon: Bell },
   { href: "/admin/admin-users", label: "Admin & Roles", icon: UserCheck },
   { href: "/admin/audit-logs", label: "Audit Logs", icon: History },
+  { href: "/admin/system-health", label: "System Health & AI", icon: Activity },
   { href: "/admin/settings", label: "Store Settings", icon: Settings },
 ];
 

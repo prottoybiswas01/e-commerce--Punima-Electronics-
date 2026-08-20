@@ -1,1 +1,35 @@
-node_modules
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Next.js build output
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Local Database
+*.db
+*.db-journal
+dev.db
+dev.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
+# Environment variables
+.env*.local
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS Files
+.DS_Store
+*.pem
+Thumbs.db
