@@ -146,6 +146,30 @@ export function OrderDetailClient({ order }: OrderDetailClientProps) {
     window.print();
   };
 
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  const handleDeleteOrder = async () => {
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("Order deleted successfully!");
+        router.push("/admin/orders");
+        router.refresh();
+      } else {
+        toast.error(data.message || "Failed to delete order");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Failed to delete order");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Action Bar */}
@@ -168,6 +192,15 @@ export function OrderDetailClient({ order }: OrderDetailClientProps) {
             className="flex items-center gap-1.5 text-xs font-semibold"
           >
             <Printer className="h-4 w-4" /> Print Invoice
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsDeleteDialogOpen(true)}
+            className="text-xs font-semibold text-rose-600 border-rose-200 hover:bg-rose-50"
+          >
+            Delete Order
           </Button>
 
           {!order.consignmentId ? (
@@ -196,6 +229,33 @@ export function OrderDetailClient({ order }: OrderDetailClientProps) {
           )}
         </div>
       </div>
+
+      {/* Delete Order Dialog */}
+      {isDeleteDialogOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-xl border">
+            <h3 className="text-base font-bold text-rose-600 flex items-center gap-2">
+              Delete Order #{order.orderNumber}?
+            </h3>
+            <p className="text-xs text-slate-600">
+              Are you sure you want to permanently delete this order record? This will remove items, timeline, and invoice history.
+            </p>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" size="sm" onClick={() => setIsDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteOrder}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete Permanently"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Grid: Details + Status Workflow */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
