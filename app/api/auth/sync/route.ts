@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     let user = await prisma.user.findUnique({
       where: { email: cleanEmail },
       include: {
-        customer: {
+        customers: {
           include: { addresses: true },
         },
       },
@@ -37,27 +37,46 @@ export async function POST(req: Request) {
           phone: phone && phone.trim() ? phone.trim() : user.phone,
         },
         include: {
-          customer: {
+          customers: {
             include: { addresses: true },
           },
         },
       });
 
       // Ensure customer record is linked
-      if (!user.customer) {
-        const customer = await prisma.customer.create({
-          data: {
-            userId: user.id,
-            name: cleanName,
-            email: cleanEmail,
-            phone: userPhone,
+      let customer = user.customers?.[0];
+      if (!customer) {
+        // Find existing customer by email or phone to link
+        customer = (await prisma.customer.findFirst({
+          where: {
+            OR: [
+              { email: cleanEmail },
+              { phone: userPhone },
+            ],
           },
           include: { addresses: true },
-        });
-        return NextResponse.json({ success: true, user, customer });
+        })) as any;
+
+        if (customer) {
+          customer = await prisma.customer.update({
+            where: { id: customer.id },
+            data: { userId: user.id, name: cleanName, email: cleanEmail },
+            include: { addresses: true },
+          });
+        } else {
+          customer = await prisma.customer.create({
+            data: {
+              userId: user.id,
+              name: cleanName,
+              email: cleanEmail,
+              phone: userPhone,
+            },
+            include: { addresses: true },
+          });
+        }
       }
 
-      return NextResponse.json({ success: true, user, customer: user.customer });
+      return NextResponse.json({ success: true, user, customer });
     }
 
     // 2. Create new User and Customer safely
@@ -68,27 +87,44 @@ export async function POST(req: Request) {
         name: cleanName,
         phone: phone && phone.trim() ? phone.trim() : null,
         role: "CUSTOMER",
-        customer: {
-          create: {
-            name: cleanName,
-            email: cleanEmail,
-            phone: userPhone,
-          },
-        },
-      },
-      include: {
-        customer: {
-          include: { addresses: true },
-        },
       },
     });
+
+    // Check if an unlinked customer already existed with this email/phone (e.g. from guest orders)
+    let customer = (await prisma.customer.findFirst({
+      where: {
+        OR: [
+          { email: cleanEmail },
+          { phone: userPhone },
+        ],
+      },
+      include: { addresses: true },
+    })) as any;
+
+    if (customer) {
+      customer = await prisma.customer.update({
+        where: { id: customer.id },
+        data: { userId: newUser.id, name: cleanName, email: cleanEmail },
+        include: { addresses: true },
+      });
+    } else {
+      customer = await prisma.customer.create({
+        data: {
+          userId: newUser.id,
+          name: cleanName,
+          email: cleanEmail,
+          phone: userPhone,
+        },
+        include: { addresses: true },
+      });
+    }
 
     // Trigger automated welcome email via Resend in background
     sendWelcomeEmail({ to: cleanEmail, name: cleanName }).catch((err) =>
       console.error("[Welcome Email Trigger Error]", err)
     );
 
-    return NextResponse.json({ success: true, user: newUser, customer: newUser.customer });
+    return NextResponse.json({ success: true, user: newUser, customer });
   } catch (error: any) {
     console.error("[Auth Sync Error]", error);
     return NextResponse.json(

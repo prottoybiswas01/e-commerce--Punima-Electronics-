@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     // 1. Check if user exists
     const user = await prisma.user.findUnique({
       where: { email: cleanEmail },
-      include: { customer: true },
+      include: { customers: true },
     });
 
     if (!user) {
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     const emailResult = await sendPasswordResetOtpEmail({
       to: cleanEmail,
       otp,
-      name: user.name || user.customer?.name || "Customer",
+      name: user.name || user.customers?.[0]?.name || "Customer",
     });
 
     if (!emailResult.success) {

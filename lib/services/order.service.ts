@@ -110,9 +110,15 @@ export async function createOrder(data: CheckoutFormValues, customerId?: string)
     // 5. Create or Find Customer
     let resolvedCustomerId = customerId;
     if (!resolvedCustomerId && data.customerPhone) {
-      let customer = await tx.customer.findUnique({
+      let customer = await tx.customer.findFirst({
         where: { phone: data.customerPhone },
       });
+
+      if (!customer && data.customerEmail) {
+        customer = await tx.customer.findFirst({
+          where: { email: data.customerEmail.toLowerCase().trim() },
+        });
+      }
 
       if (!customer) {
         customer = await tx.customer.create({
@@ -120,6 +126,15 @@ export async function createOrder(data: CheckoutFormValues, customerId?: string)
             name: data.customerName,
             phone: data.customerPhone,
             email: data.customerEmail || null,
+          },
+        });
+      } else {
+        // Update contact details if name/email are updated
+        await tx.customer.update({
+          where: { id: customer.id },
+          data: {
+            name: data.customerName || customer.name,
+            email: data.customerEmail || customer.email,
           },
         });
       }

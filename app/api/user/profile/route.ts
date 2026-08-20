@@ -13,7 +13,7 @@ export async function GET(req: Request) {
     const user = await prisma.user.findUnique({
       where: { email },
       include: {
-        customer: {
+        customers: {
           include: {
             addresses: { orderBy: { isDefault: "desc" } },
             orders: { orderBy: { createdAt: "desc" }, take: 10 },
@@ -27,7 +27,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ success: false, message: "User not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, user, customer: user.customer });
+    const customer = user.customers?.[0] || null;
+
+    return NextResponse.json({ success: true, user, customer });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
@@ -47,19 +49,24 @@ export async function PUT(req: Request) {
         name: name || undefined,
         phone: phone || undefined,
         avatarUrl: avatarUrl || undefined,
-        customer: {
-          update: {
-            name: name || undefined,
-            phone: phone || undefined,
-          },
-        },
       },
       include: {
-        customer: true,
+        customers: true,
       },
     });
 
-    return NextResponse.json({ success: true, user, customer: user.customer });
+    let customer = user.customers?.[0];
+    if (customer && (name || phone)) {
+      customer = await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          name: name || undefined,
+          phone: phone || undefined,
+        },
+      });
+    }
+
+    return NextResponse.json({ success: true, user, customer });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }

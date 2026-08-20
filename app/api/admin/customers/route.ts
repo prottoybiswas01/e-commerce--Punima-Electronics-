@@ -21,7 +21,7 @@ export async function POST(req: Request) {
     const cleanPhone = phone.trim();
     const cleanEmail = email ? email.trim().toLowerCase() : null;
 
-    const existing = await prisma.customer.findUnique({
+    const existing = await prisma.customer.findFirst({
       where: { phone: cleanPhone },
     });
 
