@@ -26,6 +26,7 @@ import {
   Send,
   Mail,
   Sparkles,
+  CheckCircle2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -341,7 +342,7 @@ export function ProductListClient({
               <div className="flex gap-2">
                 <Input
                   type="email"
-                  placeholder="e.g. bjsacademy38@gmail.com"
+                  placeholder="e.g. prottoybiswas575358@gmail.com"
                   value={testEmail}
                   onChange={(e) => setTestEmail(e.target.value)}
                   className="h-9 text-xs"
@@ -358,15 +359,13 @@ export function ProductListClient({
                 </Button>
               </div>
               
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 text-[11px] text-amber-800 space-y-1">
-                <div className="font-bold flex items-center gap-1">
-                  <span>ℹ️ Resend Domain Verification Note:</span>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 text-[11px] text-emerald-900 space-y-1">
+                <div className="font-bold flex items-center gap-1 text-emerald-800">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Verified Domain Active: punima.kodl.uk</span>
                 </div>
-                <p>
-                  While using <code>onboarding@resend.dev</code> (sandbox), Resend only allows testing to your registered account email (<strong>bjsacademy38@gmail.com</strong>).
-                </p>
-                <p>
-                  To broadcast to <strong>ALL customer emails</strong> or any address, add and verify your custom domain at <a href="https://resend.com/domains" target="_blank" rel="noreferrer" className="underline font-bold text-blue-700">resend.com/domains</a> (e.g. <code>kodl.uk</code>), then set <code>RESEND_FROM_EMAIL</code> in Vercel.
+                <p className="text-emerald-700">
+                  Your custom domain is verified! Emails will be delivered to <strong>any customer inbox</strong> with official branding from <code>support@punima.kodl.uk</code>.
                 </p>
               </div>
             </div>

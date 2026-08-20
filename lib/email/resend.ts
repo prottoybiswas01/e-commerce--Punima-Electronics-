@@ -9,8 +9,8 @@ import { generatePasswordResetOtpEmailHtml } from "./templates/password-reset-ot
 const resendApiKey = process.env.RESEND_API_KEY || "";
 export const resend = new Resend(resendApiKey);
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Purnima Electronics <onboarding@resend.dev>";
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://purnimaelectronics.com";
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "Purnima Electronics <support@punima.kodl.uk>";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://punima.kodl.uk";
 
 /**
  * 1. Send Welcome / Onboarding Email to newly registered customers
