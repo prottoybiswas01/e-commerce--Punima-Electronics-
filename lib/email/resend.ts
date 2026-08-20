@@ -5,6 +5,7 @@ import { generateOrderInvoiceEmailHtml } from "./templates/order-invoice-email";
 import { generateNewProductEmailHtml } from "./templates/new-product-email";
 import { generatePasswordResetOtpEmailHtml } from "./templates/password-reset-otp-email";
 
+// Initialize Resend Client with environment variable
 const resendApiKey = process.env.RESEND_API_KEY || "";
 export const resend = new Resend(resendApiKey);
 
@@ -21,9 +22,13 @@ export async function sendWelcomeEmail({ to, name }: { to: string; name: string 
     const html = generateWelcomeEmailHtml(name, APP_URL);
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
-      to,
+      to: [to.trim()],
       subject: `🎉 Welcome to Purnima Electronics, ${name || "Customer"}! (10% Discount Inside)`,
       html,
+      tags: [
+        { name: "category", value: "welcome_onboarding" },
+        { name: "recipient", value: name ? name.slice(0, 30) : "customer" },
+      ],
     });
 
     if (error) {
@@ -54,9 +59,13 @@ export async function sendOrderInvoiceEmail({
     const html = generateOrderInvoiceEmailHtml(order, APP_URL);
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
-      to,
+      to: [to.trim()],
       subject: `📦 Order Confirmation & Invoice #${order.orderNumber} - Purnima Electronics`,
       html,
+      tags: [
+        { name: "category", value: "order_invoice" },
+        { name: "order_number", value: String(order.orderNumber) },
+      ],
     });
 
     if (error) {
@@ -96,13 +105,17 @@ export async function broadcastNewProductEmail({ product }: { product: any }) {
 
     const html = generateNewProductEmailHtml(product, APP_URL);
 
-    // Send emails in parallel or batches
+    // Send emails in parallel with category tag
     const sendPromises = validEmails.map((email) =>
       resend.emails.send({
         from: FROM_EMAIL,
-        to: email,
+        to: [email],
         subject: `🔥 New Arrival: ${product.name} at Purnima Electronics`,
         html,
+        tags: [
+          { name: "category", value: "marketing_new_product" },
+          { name: "product_sku", value: product.sku || "product" },
+        ],
       })
     );
 
@@ -132,9 +145,12 @@ export async function sendPasswordResetOtpEmail({
     const html = generatePasswordResetOtpEmailHtml(otp, name);
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
-      to,
+      to: [to.trim()],
       subject: `🔑 Your Password Reset Code: ${otp} - Purnima Electronics`,
       html,
+      tags: [
+        { name: "category", value: "auth_otp_verification" },
+      ],
     });
 
     if (error) {
