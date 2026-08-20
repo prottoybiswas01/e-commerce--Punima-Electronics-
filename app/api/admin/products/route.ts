@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { productSchema } from "@/lib/validators";
 import { getAdminSession } from "@/lib/auth/session";
 import { adjustInventoryStock } from "@/lib/services/inventory.service";
+import { broadcastNewProductEmail } from "@/lib/email/resend";
 
 export async function POST(req: Request) {
   try {
@@ -84,6 +85,14 @@ export async function POST(req: Request) {
 
       return created;
     });
+
+    // Automatically broadcast new product marketing email to registered customers in background
+    broadcastNewProductEmail({
+      product: {
+        ...product,
+        images: data.images,
+      },
+    }).catch((err) => console.error("[Broadcast New Product Email Error]", err));
 
     return NextResponse.json({ success: true, product });
   } catch (error: any) {

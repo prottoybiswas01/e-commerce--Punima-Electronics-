@@ -26,6 +26,8 @@ prisma/dev.db
 prisma/dev.db-journal
 
 # Environment variables
+.env
+.env.local
 .env*.local
 
 # Debug

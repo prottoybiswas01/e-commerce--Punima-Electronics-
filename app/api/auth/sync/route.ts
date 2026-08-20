@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { sendWelcomeEmail } from "@/lib/email/resend";
 
 export async function POST(req: Request) {
   try {
@@ -81,6 +82,11 @@ export async function POST(req: Request) {
         },
       },
     });
+
+    // Trigger automated welcome email via Resend in background
+    sendWelcomeEmail({ to: cleanEmail, name: cleanName }).catch((err) =>
+      console.error("[Welcome Email Trigger Error]", err)
+    );
 
     return NextResponse.json({ success: true, user: newUser, customer: newUser.customer });
   } catch (error: any) {
