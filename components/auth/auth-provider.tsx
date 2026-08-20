@@ -171,13 +171,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithGoogle = async (): Promise<boolean> => {
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: "select_account" });
       const userCred = await signInWithPopup(auth, provider);
       await fetchDbProfile(userCred.user);
-      toast.success("Signed in with Google!");
+      toast.success("Signed in successfully with Google!");
       return true;
     } catch (error: any) {
-      if (error.code !== "auth/popup-closed-by-user") {
-        toast.error("Google authentication failed. Please use email & password.");
+      console.error("[Firebase Google Auth Error]", error.code, error.message);
+      if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") {
+        return false;
+      }
+      if (error.code === "auth/operation-not-allowed") {
+        toast.error("Google Sign-In is not enabled in Firebase Console. Please enable Google in Firebase Authentication > Sign-in method.");
+      } else if (error.code === "auth/unauthorized-domain") {
+        toast.error("Domain unauthorized. Please add localhost to Firebase Console > Authentication > Settings > Authorized Domains.");
+      } else if (error.code === "auth/popup-blocked") {
+        toast.error("Browser blocked popup. Please allow popups for this site and try again.");
+      } else if (error.code === "auth/network-request-failed") {
+        toast.error("Network error. Please check your internet connection.");
+      } else {
+        toast.error(`Google Sign-In failed (${error.code || "unknown"}). Please use Email & Password.`);
       }
       return false;
     }

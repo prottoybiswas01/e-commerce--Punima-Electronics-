@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export const revalidate = 0; // Dynamic rendering for freshness
+export const revalidate = 60; // Cache page for 60s with automatic background revalidation for lightning fast speed
 
 export default async function HomePage() {
   const [
