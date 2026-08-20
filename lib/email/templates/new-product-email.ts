@@ -1,4 +1,4 @@
-export function generateNewProductEmailHtml(product: any, appUrl: string = "https://purnimaelectronics.com"): string {
+export function generateNewProductEmailHtml(product: any, appUrl: string = "https://punima.kodl.uk"): string {
   const imgUrl = product.images?.[0]?.url || "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=800";
 
   return `
@@ -19,7 +19,7 @@ export function generateNewProductEmailHtml(product: any, appUrl: string = "http
           <tr>
             <td style="background-color: #0f172a; padding: 24px 32px; text-align: center;">
               <span style="background-color: #f59e0b; color: #000000; font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; display: inline-block; margin-bottom: 8px;">
-                ⭐ NEW ARRIVAL ALERT
+                NEW ARRIVAL
               </span>
               <h1 style="color: #ffffff; margin: 0; font-size: 20px; font-weight: 800;">
                 Purnima Electronics
@@ -96,4 +96,23 @@ export function generateNewProductEmailHtml(product: any, appUrl: string = "http
 </body>
 </html>
   `;
+}
+
+export function generateNewProductEmailText(product: any, appUrl: string = "https://punima.kodl.uk"): string {
+  return `
+Purnima Electronics - New Arrival Alert
+
+Product: ${product.name}
+Price: ৳${Number(product.price).toLocaleString("en-BD")}${product.originalPrice ? ` (Original: ৳${Number(product.originalPrice).toLocaleString("en-BD")})` : ""}
+Stock: In Stock (${product.stock} units)
+
+Description:
+${product.shortDescription || product.description || ""}
+
+Order online at: ${appUrl}/product/${product.slug}
+
+Cash on delivery available all over Bangladesh.
+Helpline: +880 1712-345678
+Purnima Electronics
+  `.trim();
 }

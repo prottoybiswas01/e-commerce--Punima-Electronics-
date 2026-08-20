@@ -2,7 +2,7 @@ import { Resend } from "resend";
 import prisma from "@/lib/prisma";
 import { generateWelcomeEmailHtml } from "./templates/welcome-email";
 import { generateOrderInvoiceEmailHtml } from "./templates/order-invoice-email";
-import { generateNewProductEmailHtml } from "./templates/new-product-email";
+import { generateNewProductEmailHtml, generateNewProductEmailText } from "./templates/new-product-email";
 import { generatePasswordResetOtpEmailHtml } from "./templates/password-reset-otp-email";
 
 // Initialize Resend Client with environment variable
@@ -23,6 +23,7 @@ export async function sendWelcomeEmail({ to, name }: { to: string; name: string 
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [to.trim()],
+      replyTo: "support@punima.kodl.uk",
       subject: `🎉 Welcome to Purnima Electronics, ${name || "Customer"}! (10% Discount Inside)`,
       html,
       tags: [
@@ -61,6 +62,7 @@ export async function sendOrderInvoiceEmail({
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [to.trim()],
+      replyTo: "support@punima.kodl.uk",
       subject: `📦 Order Confirmation & Invoice #${order.orderNumber} - Purnima Electronics`,
       html,
       tags: [
@@ -119,37 +121,46 @@ export async function broadcastNewProductEmail({
     }
 
     const html = generateNewProductEmailHtml(product, APP_URL);
+    const text = generateNewProductEmailText(product, APP_URL);
     console.log(`[Resend Broadcast] Sending new product email for "${product.name}" to ${validEmails.length} recipients:`, validEmails);
 
+    // Fast parallel dispatch using Promise.allSettled
+    const sendPromises = validEmails.map(async (email) => {
+      const response = await resend.emails.send({
+        from: FROM_EMAIL,
+        to: [email],
+        replyTo: "support@punima.kodl.uk",
+        headers: {
+          "List-Unsubscribe": `<mailto:support@punima.kodl.uk?subject=unsubscribe>`,
+        },
+        subject: `New Arrival: ${product.name} at Purnima Electronics`,
+        html,
+        text,
+        tags: [
+          { name: "category", value: "marketing_new_product" },
+          { name: "product_sku", value: product.sku || "product" },
+        ],
+      });
+      return { email, ...response };
+    });
+
+    const settledResults = await Promise.allSettled(sendPromises);
     const sentResults: any[] = [];
     const errors: any[] = [];
 
-    // Send emails sequentially or in small batches to respect Resend rate limits
-    for (const email of validEmails) {
-      try {
-        const { data, error } = await resend.emails.send({
-          from: FROM_EMAIL,
-          to: [email],
-          subject: `🔥 New Arrival: ${product.name} at Purnima Electronics`,
-          html,
-          tags: [
-            { name: "category", value: "marketing_new_product" },
-            { name: "product_sku", value: product.sku || "product" },
-          ],
-        });
-
-        if (error) {
-          console.error(`[Resend Broadcast Error for ${email}]:`, error);
-          errors.push({ email, error });
+    settledResults.forEach((res) => {
+      if (res.status === "fulfilled") {
+        if (res.value.error) {
+          errors.push({ email: res.value.email, error: res.value.error });
         } else {
-          console.log(`[Resend Broadcast Success for ${email}]: ID: ${data?.id}`);
-          sentResults.push({ email, id: data?.id });
+          sentResults.push({ email: res.value.email, id: res.value.data?.id });
         }
-      } catch (err: any) {
-        console.error(`[Resend Broadcast Exception for ${email}]:`, err);
-        errors.push({ email, error: err.message });
+      } else {
+        errors.push({ error: res.reason });
       }
-    }
+    });
+
+    console.log(`[Resend Broadcast Complete] Sent: ${sentResults.length}, Errors: ${errors.length}`);
 
     return {
       success: sentResults.length > 0,
@@ -183,8 +194,10 @@ export async function sendPasswordResetOtpEmail({
     const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: [to.trim()],
+      replyTo: "support@punima.kodl.uk",
       subject: `🔑 Your Password Reset Code: ${otp} - Purnima Electronics`,
       html,
+      text: `Your Purnima Electronics password reset verification code is: ${otp}. Valid for 10 minutes.`,
       tags: [
         { name: "category", value: "auth_otp_verification" },
       ],
