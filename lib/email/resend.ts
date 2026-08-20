@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { generateWelcomeEmailHtml } from "./templates/welcome-email";
 import { generateOrderInvoiceEmailHtml } from "./templates/order-invoice-email";
 import { generateNewProductEmailHtml } from "./templates/new-product-email";
+import { generatePasswordResetOtpEmailHtml } from "./templates/password-reset-otp-email";
 
 const resendApiKey = process.env.RESEND_API_KEY || "";
 export const resend = new Resend(resendApiKey);
@@ -109,6 +110,41 @@ export async function broadcastNewProductEmail({ product }: { product: any }) {
     return { success: true, count: validEmails.length, results };
   } catch (err: any) {
     console.error("[Resend Broadcast Exception]", err);
+    return { success: false, error: err.message };
+  }
+}
+
+/**
+ * 4. Send 6-Digit Password Reset OTP Verification Email
+ */
+export async function sendPasswordResetOtpEmail({
+  to,
+  otp,
+  name,
+}: {
+  to: string;
+  otp: string;
+  name?: string;
+}) {
+  if (!to || !to.includes("@")) return { success: false, message: "Invalid email" };
+
+  try {
+    const html = generatePasswordResetOtpEmailHtml(otp, name);
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: `🔑 Your Password Reset Code: ${otp} - Purnima Electronics`,
+      html,
+    });
+
+    if (error) {
+      console.error("[Resend OTP Email Error]", error);
+      return { success: false, error };
+    }
+
+    return { success: true, data };
+  } catch (err: any) {
+    console.error("[Resend OTP Email Exception]", err);
     return { success: false, error: err.message };
   }
 }
